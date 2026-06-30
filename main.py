@@ -1,6 +1,20 @@
 from fastapi import FastAPI
 
 app = FastAPI()
+applications = [
+    {
+        "id" : 1,
+        "company" : "Google",
+        "role" : "Software Engineering Intern",
+        "status" : "Applied"
+    },
+    {
+        "id" : 2,
+        "company" : "Microsoft",
+        "role" : "Software Engineering Intern",
+        "status" : "Interview"
+    }
+]
 
 @app.get("/")
 def root():
@@ -16,5 +30,5 @@ def about():
     }
 
 @app.get("/applications")
-def applications():
-    return []
+def get_applications():
+    return applications
