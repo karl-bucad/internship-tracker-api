@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -54,3 +54,28 @@ def add_application(application: Application):
     applications.append(new_application)
 
     return new_application
+
+@app.get("/applications/{id}")
+def get_application(id: int):
+    for application in applications:
+        if application["id"] == id:
+            return application
+    
+    raise HTTPException(
+        status_code = 404,
+        detail = "Application not found"
+    )
+
+@app.put("/applications/{id}")
+def update_application(id: int, updated_application: Application):
+    for application in applications:
+        if application["id"] == id:
+            application["company"] = updated_application.company
+            application["role"] = updated_application.role
+            application["status"] = updated_application.status
+            return application
+    
+    raise HTTPException(
+        status_code = 404,
+        detail = "Application not found"
+    )
