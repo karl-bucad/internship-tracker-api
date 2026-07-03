@@ -1,13 +1,20 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from database import get_connection
+from models import Application, User, LoginUser
+from passlib.context import CryptContext
 
 app = FastAPI()
 
-class Application(BaseModel):
-    company: str
-    role: str
-    status: str
+pwd_context = CryptContext(
+    schemes = ["bcrypt"],
+    deprecated = "auto"
+)
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
 @app.get("/")
 def root():
@@ -140,4 +147,63 @@ def delete_application(id: int):
 
     return {
         "message": "Application deleted successfully"
+    }
+
+@app.post("/signup")
+def add_user(user: User):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    hashed_password = hash_password(user.password)
+
+    cursor.execute(
+        """
+        INSERT INTO users (username, email, hashed_password)
+        VALUES (?, ?, ?)
+        """,
+        (user.username, user.email, hashed_password)
+    )
+
+    connection.commit()
+    new_user_id = cursor.lastrowid
+    connection.close()
+
+    return {
+        "id": new_user_id,
+        "username": user.username,
+        "email": user.email
+    }
+
+@app.post("/login")
+def login_user(user: LoginUser):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "SELECT * FROM users WHERE email = ?",
+        (user.email,)
+    )
+
+    row = cursor.fetchone()
+    connection.close()
+
+    if row is None:
+        raise HTTPException(
+            status_code = 401,
+            detail = "Invalid email or password"
+        )
+    
+    if not verify_password(user.password, row["hashed_password"]):
+        raise HTTPException(
+            status_code = 401,
+            detail = "Invalid email or password"
+        )
+
+    return {
+        "message": "Login successful",
+        "user": {
+            "id": row["id"],
+            "username": row["username"],
+            "email": row["email"]
+        }
     }
