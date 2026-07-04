@@ -1,11 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from database import get_connection
 from models import Application, User, LoginUser
 from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
-from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 app = FastAPI()
 
@@ -72,23 +71,28 @@ def about():
 def get_applications(current_user_id: int = Depends(get_current_user_id)):
     connection = get_connection()
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM applications")
+    cursor.execute(
+        "SELECT * FROM applications WHERE user_id = ?",
+        (current_user_id,)
+    )
     rows = cursor.fetchall()
     connection.close()
 
     return [dict(row) for row in rows]
 
 @app.post("/applications")
-def add_application(application: Application):
+def add_application(
+    application: Application,
+    current_user_id: int = Depends(get_current_user_id)):
     connection = get_connection()
     cursor = connection.cursor()
 
     cursor.execute(
         """
-        INSERT INTO applications (company, role, status)
-        VALUES (?, ?, ?)
+        INSERT INTO applications (company, role, status, user_id)
+        VALUES (?, ?, ?, ?)
         """,
-        (application.company, application.role, application.status)
+        (application.company, application.role, application.status, current_user_id)
     )
 
     connection.commit()
@@ -103,13 +107,16 @@ def add_application(application: Application):
     }
 
 @app.get("/applications/{id}")
-def get_application(id: int):
+def get_application(
+    id: int,
+    current_user_id: int = Depends(get_current_user_id)
+    ):
     connection = get_connection()
     cursor = connection.cursor()
 
     cursor.execute(
-        "SELECT * FROM applications WHERE id = ?",
-        (id,)
+        "SELECT * FROM applications WHERE id = ? AND user_id = ?",
+        (id, current_user_id)
     )
 
     row = cursor.fetchone()
@@ -117,14 +124,18 @@ def get_application(id: int):
 
     if row is None:
         raise HTTPException(
-            status_code=404,
-            detail="Application not found"
+            status_code = 404,
+            detail = "Application not found"
         )
 
     return dict(row)
 
 @app.put("/applications/{id}")
-def update_application(id: int, updated_application: Application):
+def update_application(
+    id: int, 
+    updated_application: Application,
+    current_user_id: int = Depends(get_current_user_id)
+    ):
     connection = get_connection()
     cursor = connection.cursor()
 
@@ -132,13 +143,14 @@ def update_application(id: int, updated_application: Application):
         """
         UPDATE applications
         SET company = ?, role = ?, status = ?
-        WHERE id = ?
+        WHERE id = ? AND user_id = ?
         """,
         (
             updated_application.company,
             updated_application.role,
             updated_application.status,
-            id
+            id,
+            current_user_id
         )
     )
 
@@ -147,8 +159,8 @@ def update_application(id: int, updated_application: Application):
     if cursor.rowcount == 0:
         connection.close()
         raise HTTPException(
-            status_code=404,
-            detail="Application not found"
+            status_code = 404,
+            detail = "Application not found"
         )
 
     connection.close()
@@ -161,16 +173,19 @@ def update_application(id: int, updated_application: Application):
     }
 
 @app.delete("/applications/{id}")
-def delete_application(id: int):
+def delete_application(
+    id: int,
+    current_user_id: int = Depends(get_current_user_id)
+    ):
     connection = get_connection()
     cursor = connection.cursor()
 
     cursor.execute(
         """
         DELETE FROM applications
-        WHERE id = ?
+        WHERE id = ? AND user_id = ?
         """,
-        (id,)
+        (id, current_user_id)
     )
 
     connection.commit()
@@ -214,13 +229,13 @@ def add_user(user: User):
     }
 
 @app.post("/login")
-def login_user(user: LoginUser):
+def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
     connection = get_connection()
     cursor = connection.cursor()
 
     cursor.execute(
         "SELECT * FROM users WHERE email = ?",
-        (user.email,)
+        (form_data.username,)
     )
 
     row = cursor.fetchone()
@@ -232,7 +247,7 @@ def login_user(user: LoginUser):
             detail = "Invalid email or password"
         )
     
-    if not verify_password(user.password, row["hashed_password"]):
+    if not verify_password(form_data.password, row["hashed_password"]):
         raise HTTPException(
             status_code = 401,
             detail = "Invalid email or password"
