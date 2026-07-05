@@ -4,6 +4,8 @@ class Application(BaseModel):
     company: str
     role: str
     status: str
+    notes: str = ""
+    applied_date: str = ""
 
 class User(BaseModel):
     username: str

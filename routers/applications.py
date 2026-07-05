@@ -27,10 +27,16 @@ def add_application(
 
     cursor.execute(
         """
-        INSERT INTO applications (company, role, status, user_id)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO applications (company, role, status, notes, applied_date, user_id)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
-        (application.company, application.role, application.status, current_user_id)
+        (
+            application.company,
+            application.role,
+            application.status,
+            application.notes,
+            application.applied_date,
+            current_user_id)
     )
 
     connection.commit()
@@ -41,7 +47,9 @@ def add_application(
         "id": new_id,
         "company": application.company,
         "role": application.role,
-        "status": application.status
+        "status": application.status,
+        "notes": application.notes,
+        "applied_date": application.applied_date
     }
 
 @router.get("/applications/{id}")
@@ -80,13 +88,15 @@ def update_application(
     cursor.execute(
         """
         UPDATE applications
-        SET company = ?, role = ?, status = ?
+        SET company = ?, role = ?, status = ?, notes = ?, applied_date = ?
         WHERE id = ? AND user_id = ?
         """,
         (
             updated_application.company,
             updated_application.role,
             updated_application.status,
+            updated_application.notes,
+            updated_application.applied_date,
             id,
             current_user_id
         )
@@ -107,7 +117,9 @@ def update_application(
         "id": id,
         "company": updated_application.company,
         "role": updated_application.role,
-        "status": updated_application.status
+        "status": updated_application.status,
+        "notes": updated_application.notes,
+        "applied_date": updated_application.applied_date
     }
 
 @router.delete("/applications/{id}")

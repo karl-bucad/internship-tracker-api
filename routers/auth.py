@@ -1,3 +1,4 @@
+import sqlite3
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from database import get_connection
@@ -11,25 +12,34 @@ def add_user(user: User):
     connection = get_connection()
     cursor = connection.cursor()
 
-    hashed_password = hash_password(user.password)
+    try:
+        hashed_password = hash_password(user.password)
 
-    cursor.execute(
-        """
-        INSERT INTO users (username, email, hashed_password)
-        VALUES (?, ?, ?)
-        """,
-        (user.username, user.email, hashed_password)
-    )
+        cursor.execute(
+            """
+            INSERT INTO users (username, email, hashed_password)
+            VALUES (?, ?, ?)
+            """,
+            (user.username, user.email, hashed_password)
+        )
 
-    connection.commit()
-    new_user_id = cursor.lastrowid
-    connection.close()
+        connection.commit()
+        new_user_id = cursor.lastrowid
 
-    return {
-        "id": new_user_id,
-        "username": user.username,
-        "email": user.email
-    }
+        return {
+            "id": new_user_id,
+            "username": user.username,
+            "email": user.email
+        }
+
+    except sqlite3.IntegrityError:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already exists"
+        )
+
+    finally:
+        connection.close()
 
 @router.post("/login")
 def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
