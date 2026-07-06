@@ -11,8 +11,14 @@ from security import (
 from routers.applications import router as applications_router
 from routers.auth import router as auth_router
 from fastapi.middleware.cors import CORSMiddleware
+from init_db import init_db
 
 app = FastAPI()
+
+@app.on_event("startup")
+def startup():
+    init_db()
+
 app.include_router(applications_router)
 app.include_router(auth_router)
 app.add_middleware(
