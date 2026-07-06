@@ -19,7 +19,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://internship-tracker-frontend-95v.onrender.com",
+        "https://internship-tracker-frontend-95sv.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
