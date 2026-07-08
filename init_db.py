@@ -25,6 +25,7 @@ def init_db():
                 status TEXT,
                 notes TEXT DEFAULT '',
                 applied_date TEXT DEFAULT '',
+                job_url TEXT DEFAULT '',
                 user_id INTEGER REFERENCES users(id)
             )
             """
@@ -50,6 +51,7 @@ def init_db():
                 status TEXT,
                 notes TEXT DEFAULT '',
                 applied_date TEXT DEFAULT '',
+                job_url TEXT DEFAULT '',
                 user_id INTEGER
             )
             """

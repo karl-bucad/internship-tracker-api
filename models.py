@@ -6,6 +6,7 @@ class Application(BaseModel):
     status: str
     notes: str = ""
     applied_date: str = ""
+    job_url: str = ""
 
 class User(BaseModel):
     username: str

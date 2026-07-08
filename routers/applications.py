@@ -15,8 +15,9 @@ def application_row_to_dict(row):
             "status": row[3],
             "notes": row[4],
             "applied_date": row[5],
-            "user_id": row[6],
-        }
+            "job_url": row[6],
+            "user_id": row[7],
+    }
 
     return dict(row)
 
@@ -54,8 +55,8 @@ def add_application(
     if DATABASE_URL:
         cursor.execute(
             """
-            INSERT INTO applications (company, role, status, notes, applied_date, user_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO applications (company, role, status, notes, applied_date, job_url, user_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             RETURNING id
             """,
             (
@@ -64,6 +65,7 @@ def add_application(
                 application.status,
                 application.notes,
                 application.applied_date,
+                application.job_url,
                 current_user_id
             )
         )
@@ -71,8 +73,8 @@ def add_application(
     else:
         cursor.execute(
             """
-            INSERT INTO applications (company, role, status, notes, applied_date, user_id)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO applications (company, role, status, notes, applied_date, job_url, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 application.company,
@@ -80,6 +82,7 @@ def add_application(
                 application.status,
                 application.notes,
                 application.applied_date,
+                application.job_url,
                 current_user_id
             )
         )
@@ -94,7 +97,8 @@ def add_application(
         "role": application.role,
         "status": application.status,
         "notes": application.notes,
-        "applied_date": application.applied_date
+        "applied_date": application.applied_date,
+        "job_url": application.job_url
     }
 
 
@@ -142,7 +146,7 @@ def update_application(
         cursor.execute(
             """
             UPDATE applications
-            SET company = %s, role = %s, status = %s, notes = %s, applied_date = %s
+            SET company = %s, role = %s, status = %s, notes = %s, applied_date = %s, job_url = %s
             WHERE id = %s AND user_id = %s
             """,
             (
@@ -151,6 +155,7 @@ def update_application(
                 updated_application.status,
                 updated_application.notes,
                 updated_application.applied_date,
+                updated_application.job_url,
                 id,
                 current_user_id
             )
@@ -159,7 +164,7 @@ def update_application(
         cursor.execute(
             """
             UPDATE applications
-            SET company = ?, role = ?, status = ?, notes = ?, applied_date = ?
+            SET company = ?, role = ?, status = ?, notes = ?, applied_date = ?, job_url = ?
             WHERE id = ? AND user_id = ?
             """,
             (
@@ -168,6 +173,7 @@ def update_application(
                 updated_application.status,
                 updated_application.notes,
                 updated_application.applied_date,
+                updated_application.job_url,
                 id,
                 current_user_id
             )
@@ -190,7 +196,8 @@ def update_application(
         "role": updated_application.role,
         "status": updated_application.status,
         "notes": updated_application.notes,
-        "applied_date": updated_application.applied_date
+        "applied_date": updated_application.applied_date,
+        "job_url": updated_application.job_url
     }
 
 
