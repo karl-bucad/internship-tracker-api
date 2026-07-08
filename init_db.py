@@ -57,5 +57,17 @@ def init_db():
             """
         )
 
+    try:
+        if DATABASE_URL:
+            cursor.execute(
+                "ALTER TABLE applications ADD COLUMN IF NOT EXISTS job_url TEXT DEFAULT ''"
+            )
+        else:
+            cursor.execute(
+                "ALTER TABLE applications ADD COLUMN job_url TEXT DEFAULT ''"
+            )
+    except Exception:
+        pass
+
     connection.commit()
     connection.close()
