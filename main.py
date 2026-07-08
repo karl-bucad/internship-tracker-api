@@ -24,8 +24,9 @@ app.include_router(auth_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "https://internship-tracker-frontend-95sv.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://internship-tracker-frontend-95sv.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
