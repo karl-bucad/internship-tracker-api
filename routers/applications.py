@@ -5,6 +5,10 @@ from security import get_current_user_id
 
 router = APIRouter()
 
+APPLICATION_COLUMNS = """
+id, company, role, status, notes, applied_date, job_url, user_id
+"""
+
 
 def application_row_to_dict(row):
     if DATABASE_URL:
@@ -17,7 +21,7 @@ def application_row_to_dict(row):
             "applied_date": row[5],
             "job_url": row[6],
             "user_id": row[7],
-    }
+        }
 
     return dict(row)
 
@@ -29,12 +33,20 @@ def get_applications(current_user_id: int = Depends(get_current_user_id)):
 
     if DATABASE_URL:
         cursor.execute(
-            "SELECT * FROM applications WHERE user_id = %s",
+            f"""
+            SELECT {APPLICATION_COLUMNS}
+            FROM applications
+            WHERE user_id = %s
+            """,
             (current_user_id,)
         )
     else:
         cursor.execute(
-            "SELECT * FROM applications WHERE user_id = ?",
+            f"""
+            SELECT {APPLICATION_COLUMNS}
+            FROM applications
+            WHERE user_id = ?
+            """,
             (current_user_id,)
         )
 
@@ -112,12 +124,20 @@ def get_application(
 
     if DATABASE_URL:
         cursor.execute(
-            "SELECT * FROM applications WHERE id = %s AND user_id = %s",
+            f"""
+            SELECT {APPLICATION_COLUMNS}
+            FROM applications
+            WHERE id = %s AND user_id = %s
+            """,
             (id, current_user_id)
         )
     else:
         cursor.execute(
-            "SELECT * FROM applications WHERE id = ? AND user_id = ?",
+            f"""
+            SELECT {APPLICATION_COLUMNS}
+            FROM applications
+            WHERE id = ? AND user_id = ?
+            """,
             (id, current_user_id)
         )
 
