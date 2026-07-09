@@ -82,11 +82,15 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
         )
 
     if DATABASE_URL:
-        hashed_password = row[3]
         user_id = row[0]
+        username = row[1]
+        email = row[2]
+        hashed_password = row[3]
     else:
-        hashed_password = row["hashed_password"]
         user_id = row["id"]
+        username = row["username"]
+        email = row["email"]
+        hashed_password = row["hashed_password"]
 
     if not verify_password(form_data.password, hashed_password):
         raise HTTPException(
@@ -100,5 +104,7 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
 
     return {
         "access_token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "username": username,
+        "email": email
     }
